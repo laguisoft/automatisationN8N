@@ -1,120 +1,135 @@
 # Laguisoft Lead Finder
 
-Plateforme professionnelle d'automatisation de recherche, d'enrichissement et
-de qualification de leads, combinant une application **Node.js / TypeScript**
-et des workflows **n8n**, avec **PostgreSQL** pour la persistance et
-**Redis** pour le cache/les files d'attente.
+Plateforme de prospection B2B pour **Laguisoft Technologie** (Kankan, Haute
+Guinee) : identifie des entreprises susceptibles d'avoir besoin d'une
+application de gestion (ERP, gestion commerciale, stock, facturation,
+comptabilite, POS, gestion scolaire ou hospitaliere), les analyse et les
+score avec **Claude**, et permet une **validation humaine** avant tout
+envoi de message commercial.
 
-> Etat actuel : architecture du projet uniquement. Aucun code metier n'a
-> encore ete implemente (voir section "Prochaines etapes").
+n8n orchestre la planification et les notifications ; toute la logique
+metier (recherche, extraction, analyse, scoring, base de donnees, envoi)
+vit dans une application **Node.js / TypeScript** testable et versionnee.
 
 ## Stack technique
 
-| Composant   | Role                                                              |
-| ----------- | ------------------------------------------------------------------ |
-| Node.js/TS  | Application backend (API, orchestration, logique metier)          |
-| n8n         | Moteur de workflows d'automatisation (recherche, enrichissement, notifications) |
-| PostgreSQL  | Base de donnees relationnelle (leads, entreprises, campagnes...)   |
-| Redis       | Cache, files d'attente, gestion de session/rate-limit             |
-| Docker      | Conteneurisation et orchestration locale via `docker-compose`     |
+| Composant | Role |
+| --- | --- |
+| Node.js / TypeScript | API, pipeline de prospection, dashboard |
+| n8n | Planification (cron) et orchestration de haut niveau |
+| Claude (Anthropic) | Analyse des prospects, scoring assiste, redaction des messages |
+| PostgreSQL | Prospects, runs, journaux d'execution, messages envoyes |
+| Redis | Reserve pour cache / limitation de debit distribuee |
+| Docker Compose | Orchestration locale de l'ensemble des services |
+| Google CSE, Bing, Brave, Tavily, DuckDuckGo | Recherche multi-moteurs (API officielles uniquement) |
+
+## Pipeline
+
+```
+Cron (n8n) -> Recherche -> Extraction -> Nettoyage -> Deduplication
+  -> Analyse Claude -> Scoring -> Coordonnees -> Base de donnees
+  -> [ Validation humaine (dashboard) ]
+  -> Generation du message -> Envoi (email / WhatsApp+consentement / formulaire)
+  -> Journalisation
+```
+
+Detail complet : [`docs/workflows-guide.md`](docs/workflows-guide.md).
+
+## Demarrage rapide
+
+```bash
+./scripts/setup.sh          # copie .env, installe les deps, DB + migrations
+# -> renseigner DASHBOARD_API_KEY, ANTHROPIC_API_KEY et au moins un moteur
+#    de recherche dans .env (voir docs/environment-variables.md)
+docker compose up -d
+./scripts/import-workflows.sh
+npm run seed                 # optionnel : 3 prospects d'exemple pour tester le dashboard
+```
+
+- Dashboard : http://localhost:3000
+- API : http://localhost:3000/api (en-tete `x-api-key` requis)
+- n8n : http://localhost:5678
+
+Guide detaille : [`docs/installation.md`](docs/installation.md).
 
 ## Arborescence du projet
 
 ```
 .
-├── src/                    # Code source de l'application Node.js/TypeScript
-│   ├── config/             # Chargement centralise de la configuration (.env, connexions)
-│   ├── modules/            # Modules metier par domaine fonctionnel
-│   ├── services/           # Services transverses (DB, cache, API externes, n8n)
-│   ├── database/           # Client DB, migrations et seeds PostgreSQL
-│   │   ├── migrations/
-│   │   └── seeds/
-│   ├── utils/              # Fonctions utilitaires generiques
-│   ├── types/              # Types et interfaces TypeScript partages
-│   └── index.ts            # Point d'entree de l'application
-├── prompts/                # Prompts IA versionnes (recherche, scoring, redaction...)
-├── workflows/               # Exports JSON des workflows n8n, versionnes
-├── scripts/                 # Scripts operationnels (init DB, seed, maintenance)
-├── docs/                    # Documentation technique et fonctionnelle
-├── tests/                   # Tests automatises
-│   ├── unit/                # Tests unitaires
-│   ├── integration/         # Tests d'integration (DB, Redis...)
-│   └── e2e/                  # Tests de bout en bout
-├── docker/
-│   └── postgres-init/       # Scripts d'initialisation PostgreSQL (extensions, roles...)
-├── docker-compose.yml       # Orchestration des services (app, postgres, redis, n8n)
-├── Dockerfile                # Image de l'application Node.js/TypeScript
+├── src/
+│   ├── config/                 # Variables d'environnement (zod) + config/*.json
+│   ├── middleware/              # Auth API (x-api-key)
+│   ├── modules/
+│   │   ├── prospecting/         # Orchestration du pipeline, route /api/prospecting/run
+│   │   ├── dashboard/           # Routes REST + frontend statique (public/)
+│   │   └── logs/                # Routes de consultation des runs/journaux
+│   ├── services/
+│   │   ├── search/              # Google/Bing/Brave/Tavily/DuckDuckGo + aggregateur
+│   │   ├── extraction/          # Recuperation de pages publiques (robots.txt, rate limit)
+│   │   ├── cleaning/            # Normalisation texte/telephone/email/site/nom
+│   │   ├── dedup/                # Empreinte et deduplication
+│   │   ├── claude/               # Client Anthropic, prompts, analyse, message
+│   │   ├── scoring/              # Calcul du score (config/scoring-weights.json)
+│   │   ├── contacts/             # Reconciliation des coordonnees
+│   │   ├── messaging/            # Email, WhatsApp Business, formulaire, dispatcher
+│   │   └── export/               # CSV, Excel, PDF
+│   ├── database/                 # Pool pg, migrations, repositories
+│   ├── utils/                    # logger, http, retry, rate limiter, robots.txt, concurrency
+│   ├── types/                    # Types partages
+│   ├── server.ts / index.ts      # Assemblage Express + bootstrap
+├── config/                       # Config metier versionnee (scoring, secteurs, requetes, profil entreprise)
+├── prompts/                       # Prompts Claude (analyse, generation de message)
+├── workflows/                     # Workflows n8n exportes (.json)
+├── scripts/                       # setup.sh, import-workflows.sh, seed.ts
+├── docs/                          # Guides (installation, Docker, n8n, APIs, securite...)
+├── tests/                         # unit/, integration/, e2e/
+├── docker-compose.yml
+├── Dockerfile
 ├── package.json
 ├── tsconfig.json
-├── .env.example              # Modele des variables d'environnement
-└── README.md
+└── .env.example
 ```
 
-## Role detaille de chaque dossier
+Role detaille de chaque dossier : README.md dans chaque repertoire
+(`src/config/README.md`, `src/services/README.md`, `config/README.md`,
+`prompts/README.md`, `workflows/README.md`, `scripts/README.md`,
+`docs/README.md`, `tests/README.md`).
 
-- **`src/config`** : point unique de lecture des variables d'environnement
-  et de construction des objets de configuration (DB, Redis, n8n). Aucun
-  autre dossier ne doit acceder directement a `process.env`.
-- **`src/modules`** : logique metier organisee par domaine (ex : leads,
-  enrichissement, scoring, export). Chaque module est autonome et s'appuie
-  sur les services partages.
-- **`src/services`** : services reutilisables entre modules (acces
-  PostgreSQL/Redis, appels API externes, integration avec n8n).
-- **`src/database`** : connexion a PostgreSQL, migrations de schema
-  (`migrations/`) et donnees d'amorcage (`seeds/`).
-- **`src/utils`** : helpers generiques sans dependance metier (logger,
-  formatage, validation).
-- **`src/types`** : contrats de donnees TypeScript partages dans tout le
-  projet.
-- **`prompts`** : bibliotheque versionnee des prompts utilises par les
-  fonctionnalites IA (recherche/qualification de leads, enrichissement,
-  redaction de messages), independante du code applicatif.
-- **`workflows`** : exports JSON des workflows n8n, versionnes avec le code
-  pour assurer la tracabilite et la reproductibilite des automatisations.
-- **`scripts`** : scripts operationnels hors cycle de vie applicatif
-  (initialisation, maintenance, import/export).
-- **`docs`** : documentation technique (architecture, schema de donnees,
-  ADR) et fonctionnelle du projet.
-- **`tests`** : tests unitaires, d'integration et de bout en bout, separes
-  par niveau de granularite.
-- **`docker`** : ressources d'initialisation des conteneurs (ex : scripts
-  SQL executes au demarrage de PostgreSQL).
+## Garde-fous integres
 
-## Demarrage rapide
+- **Validation humaine obligatoire** avant tout envoi
+  (`PIPELINE_REQUIRE_HUMAN_VALIDATION=true`, verifie cote serveur).
+- **Consentement explicite** requis a chaque envoi WhatsApp
+  (`WHATSAPP_REQUIRE_OPT_IN=true`).
+- **robots.txt respecte** lors de l'extraction (`EXTRACTION_RESPECT_ROBOTS_TXT=true`).
+- **Limitation de debit** configurable par moteur de recherche et pour
+  l'extraction (`SEARCH_MAX_REQUESTS_PER_MINUTE`,
+  `EXTRACTION_MAX_REQUESTS_PER_MINUTE`).
+- **Deduplication** systematique (empreinte site/telephone/nom+ville).
+- **Aucun scraping de SERP** : uniquement des API de recherche officielles.
 
-```bash
-# 1. Copier le fichier d'environnement
-cp .env.example .env
+Detail : [`docs/data-privacy.md`](docs/data-privacy.md).
 
-# 2. Installer les dependances
-npm install
+## Scripts npm
 
-# 3. Lancer l'infrastructure (PostgreSQL, Redis, n8n, app)
-docker compose up -d
+| Commande | Description |
+| --- | --- |
+| `npm run dev` | API en mode developpement (ts-node-dev) |
+| `npm run build` | Compile TypeScript + copie les assets du dashboard vers `dist/` |
+| `npm start` | Demarre l'application compilee |
+| `npm run migrate` | Applique les migrations PostgreSQL |
+| `npm run seed` | Insere des prospects d'exemple |
+| `npm run lint` / `lint:fix` | Verifie/corrige le style avec ESLint |
+| `npm test` / `test:unit` / `test:integration` | Tests (voir `tests/README.md`) |
+| `npm run typecheck` | Verifie le typage sans compiler |
 
-# 4. Acceder aux services
-# - n8n       : http://localhost:5678
-# - App       : http://localhost:3000
-# - PostgreSQL: localhost:5432
-# - Redis     : localhost:6379
-```
+## Documentation
 
-## Scripts npm disponibles
-
-| Commande               | Description                                  |
-| ----------------------- | --------------------------------------------- |
-| `npm run dev`           | Lance l'application en mode developpement    |
-| `npm run build`         | Compile le TypeScript vers `dist/`           |
-| `npm start`             | Demarre l'application compilee               |
-| `npm run lint`          | Verifie le style de code avec ESLint         |
-| `npm run test`          | Execute l'ensemble des tests                 |
-| `npm run test:unit`     | Execute uniquement les tests unitaires       |
-| `npm run test:integration` | Execute uniquement les tests d'integration |
-| `npm run typecheck`     | Verifie le typage sans compiler              |
-
-## Prochaines etapes
-
-Cette phase a mis en place l'architecture complete du projet (dossiers,
-configuration Docker, outillage TypeScript). Le developpement du code metier
-(modules `leads`, `enrichment`, `scoring`, schema de base de donnees,
-workflows n8n, prompts IA) demarrera apres validation de cette architecture.
+- [`docs/installation.md`](docs/installation.md)
+- [`docs/docker-guide.md`](docs/docker-guide.md)
+- [`docs/n8n-guide.md`](docs/n8n-guide.md)
+- [`docs/environment-variables.md`](docs/environment-variables.md)
+- [`docs/apis-guide.md`](docs/apis-guide.md)
+- [`docs/workflows-guide.md`](docs/workflows-guide.md)
+- [`docs/maintenance.md`](docs/maintenance.md)
+- [`docs/data-privacy.md`](docs/data-privacy.md)

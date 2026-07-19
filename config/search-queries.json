@@ -1,0 +1,17 @@
+{
+  "description": "Zones geographiques et gabarits de requetes utilises par les connecteurs de recherche. {sector} et {location} sont substitues au moment de l'execution.",
+  "locations": [
+    { "name": "Kankan", "priority": 1 },
+    { "name": "Haute Guinee", "priority": 2 },
+    { "name": "Guinee", "priority": 3 }
+  ],
+  "queryTemplates": [
+    "{sector} a {location} contact",
+    "{sector} {location} Guinee telephone",
+    "liste {sector} {location}",
+    "annuaire entreprises {location} {sector}",
+    "{sector} {location} page Facebook"
+  ],
+  "maxResultsPerQuery": 10,
+  "maxQueriesPerRun": 40
+}

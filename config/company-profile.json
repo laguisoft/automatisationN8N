@@ -1,0 +1,27 @@
+{
+  "name": "Laguisoft Technologie",
+  "activities": [
+    "Developpement d'applications de gestion",
+    "ERP",
+    "Gestion commerciale",
+    "Gestion de stock",
+    "Facturation",
+    "Comptabilite",
+    "POS",
+    "Gestion scolaire",
+    "Gestion hospitaliere",
+    "Applications sur mesure",
+    "Applications web",
+    "Applications mobiles",
+    "Solutions Cloud"
+  ],
+  "priorityZones": ["Kankan", "Haute Guinee", "Guinee"],
+  "targetSectors": [
+    "boutiques", "supermarches", "pharmacies", "quincailleries", "hotels",
+    "restaurants", "ecoles", "cliniques", "cabinets", "stations-service",
+    "transport", "grossistes", "pme", "industries", "ong", "associations"
+  ],
+  "valueProposition": "Applications de gestion sur mesure permettant de gerer les ventes, le stock, la facturation, les achats et les rapports en temps reel.",
+  "callToAction": "Une demonstration gratuite",
+  "signature": "Laguisoft Technologie"
+}

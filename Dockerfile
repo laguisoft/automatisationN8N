@@ -14,6 +14,8 @@ FROM base AS runtime
 ENV NODE_ENV=production
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build /usr/src/app/config ./config
+COPY --from=build /usr/src/app/prompts ./prompts
 COPY package.json ./
 
 EXPOSE 3000

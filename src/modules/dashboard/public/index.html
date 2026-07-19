@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Laguisoft Lead Finder - Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Laguisoft Lead Finder</h1>
+    <div id="api-key-box">
+      <label for="api-key">Cle API</label>
+      <input id="api-key" type="password" placeholder="x-api-key" />
+      <button id="save-api-key">Enregistrer</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="filters">
+      <input id="filter-search" type="text" placeholder="Rechercher (nom, description)" />
+      <input id="filter-city" type="text" placeholder="Ville" />
+      <input id="filter-sector" type="text" placeholder="Secteur" />
+      <select id="filter-status">
+        <option value="">Tous les statuts</option>
+        <option value="pending_validation">A valider</option>
+        <option value="validated">Valide</option>
+        <option value="rejected">Refuse</option>
+        <option value="message_generated">Message genere</option>
+        <option value="sent">Envoye</option>
+      </select>
+      <input id="filter-min-score" type="number" min="0" max="100" placeholder="Score min" />
+      <button id="apply-filters">Filtrer</button>
+      <span class="spacer"></span>
+      <button data-export="csv">Exporter CSV</button>
+      <button data-export="xlsx">Exporter Excel</button>
+      <button data-export="pdf">Exporter PDF</button>
+      <button id="trigger-run">Lancer un run</button>
+    </section>
+
+    <p id="status-line"></p>
+
+    <table id="prospects-table">
+      <thead>
+        <tr>
+          <th>Entreprise</th>
+          <th>Ville</th>
+          <th>Secteur</th>
+          <th>Score</th>
+          <th>Statut</th>
+          <th>Resume IA</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="prospects-body"></tbody>
+    </table>
+  </main>
+
+  <div id="detail-modal" class="modal hidden">
+    <div class="modal-content">
+      <button id="close-modal" class="close">&times;</button>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+{
+  "name": "Laguisoft - 02 Generation des messages (prospects valides)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Generation automatique des messages\n\nPour chaque prospect valide manuellement dans le dashboard (statut `validated`), genere le message commercial via Claude. L'ENVOI reste une action manuelle dans le dashboard (bouton \"Envoyer\"), avec confirmation de consentement pour WhatsApp : ce workflow ne fait AUCUN envoi.\n\nCredential requise : `Laguisoft API Key` (Header Auth, en-tete `x-api-key`).",
+        "height": 220,
+        "width": 380
+      },
+      "id": "b1c2d3e4-0002-4a1a-8b1a-000000000001",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, -180]
+    },
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "hours", "hoursInterval": 2 }] }
+      },
+      "id": "b1c2d3e4-0002-4a1a-8b1a-000000000002",
+      "name": "Toutes les 2 heures",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-200, 80]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://app:3000/api/prospects",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "status", "value": "validated" },
+            { "name": "limit", "value": "50" }
+          ]
+        }
+      },
+      "id": "b1c2d3e4-0002-4a1a-8b1a-000000000003",
+      "name": "Lister les prospects valides",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [40, 80],
+      "credentials": {
+        "httpHeaderAuth": { "id": "laguisoft-api-key", "name": "Laguisoft API Key" }
+      }
+    },
+    {
+      "parameters": { "fieldToSplitOut": "items", "options": {} },
+      "id": "b1c2d3e4-0002-4a1a-8b1a-000000000004",
+      "name": "Extraire chaque prospect",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [280, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://app:3000/api/prospects/{{ $json.id }}/generate-message",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": { "timeout": 60000 }
+      },
+      "id": "b1c2d3e4-0002-4a1a-8b1a-000000000005",
+      "name": "Generer le message (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 80],
+      "credentials": {
+        "httpHeaderAuth": { "id": "laguisoft-api-key", "name": "Laguisoft API Key" }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "b1c2d3e4-0002-4a1a-8b1a-000000000006",
+      "name": "Fin de lot",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [760, 80]
+    }
+  ],
+  "connections": {
+    "Toutes les 2 heures": {
+      "main": [[{ "node": "Lister les prospects valides", "type": "main", "index": 0 }]]
+    },
+    "Lister les prospects valides": {
+      "main": [[{ "node": "Extraire chaque prospect", "type": "main", "index": 0 }]]
+    },
+    "Extraire chaque prospect": {
+      "main": [[{ "node": "Generer le message (Claude)", "type": "main", "index": 0 }]]
+    },
+    "Generer le message (Claude)": {
+      "main": [[{ "node": "Fin de lot", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

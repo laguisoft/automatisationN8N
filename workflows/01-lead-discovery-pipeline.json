@@ -1,0 +1,141 @@
+{
+  "name": "Laguisoft - 01 Decouverte et qualification de prospects",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Pipeline principal\n\nCron -> declenche un run complet cote backend TypeScript (recherche multi-moteurs, extraction, nettoyage, deduplication, analyse Claude, scoring, sauvegarde en base). La validation humaine se fait ensuite dans le dashboard, hors n8n.\n\nCredential requise : `Laguisoft API Key` (Header Auth, en-tete `x-api-key` = valeur de `DASHBOARD_API_KEY`).",
+        "height": 220,
+        "width": 380
+      },
+      "id": "a4f5e9d0-0001-4a1a-8b1a-000000000001",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, -180]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 6 * * *" }]
+        }
+      },
+      "id": "a4f5e9d0-0001-4a1a-8b1a-000000000002",
+      "name": "Cron quotidien 06h00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-200, 80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://app:3000/api/prospecting/run",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [{ "name": "triggeredBy", "value": "n8n-cron" }]
+        },
+        "options": { "timeout": 900000 }
+      },
+      "id": "a4f5e9d0-0001-4a1a-8b1a-000000000003",
+      "name": "Lancer le run de prospection",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [40, 80],
+      "credentials": {
+        "httpHeaderAuth": { "id": "laguisoft-api-key", "name": "Laguisoft API Key" }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "cond-errors",
+              "leftValue": "={{ $json.errorsCount }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "a4f5e9d0-0001-4a1a-8b1a-000000000004",
+      "name": "Des erreurs ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [280, 80]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msg-error",
+              "name": "notification",
+              "type": "string",
+              "value": "=Run de prospection termine avec {{ $json.errorsCount }} erreur(s). Voir /api/logs/runs/{{ $json.runId }}."
+            }
+          ]
+        }
+      },
+      "id": "a4f5e9d0-0001-4a1a-8b1a-000000000005",
+      "name": "Preparer alerte erreurs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [520, -40]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msg-success",
+              "name": "notification",
+              "type": "string",
+              "value": "=Run de prospection termine : {{ $json.prospectsNew }} nouveau(x) prospect(s) sur {{ $json.prospectsFound }} analyse(s). A valider dans le dashboard."
+            }
+          ]
+        }
+      },
+      "id": "a4f5e9d0-0001-4a1a-8b1a-000000000006",
+      "name": "Preparer resume succes",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [520, 200]
+    },
+    {
+      "parameters": {},
+      "id": "a4f5e9d0-0001-4a1a-8b1a-000000000007",
+      "name": "Notifier equipe commerciale (a configurer)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [760, 80],
+      "notes": "Remplacer par un noeud Email / Slack / Microsoft Teams selon les outils internes de Laguisoft. Le champ `notification` en entree contient le texte pret a envoyer."
+    }
+  ],
+  "connections": {
+    "Cron quotidien 06h00": {
+      "main": [[{ "node": "Lancer le run de prospection", "type": "main", "index": 0 }]]
+    },
+    "Lancer le run de prospection": {
+      "main": [[{ "node": "Des erreurs ?", "type": "main", "index": 0 }]]
+    },
+    "Des erreurs ?": {
+      "main": [
+        [{ "node": "Preparer alerte erreurs", "type": "main", "index": 0 }],
+        [{ "node": "Preparer resume succes", "type": "main", "index": 0 }]
+      ]
+    },
+    "Preparer alerte erreurs": {
+      "main": [[{ "node": "Notifier equipe commerciale (a configurer)", "type": "main", "index": 0 }]]
+    },
+    "Preparer resume succes": {
+      "main": [[{ "node": "Notifier equipe commerciale (a configurer)", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

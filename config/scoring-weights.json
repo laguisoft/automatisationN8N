@@ -1,0 +1,51 @@
+{
+  "description": "Ponderation utilisee par le service de scoring (src/services/scoring). Modifiable sans redeploiement du code.",
+  "maxScore": 100,
+  "criteria": {
+    "locatedInKankan": {
+      "points": 30,
+      "description": "L'entreprise est situee a Kankan"
+    },
+    "emailFound": {
+      "points": 10,
+      "description": "Une adresse email a ete trouvee"
+    },
+    "phoneFound": {
+      "points": 10,
+      "description": "Un numero de telephone a ete trouve"
+    },
+    "websiteFound": {
+      "points": 10,
+      "description": "L'entreprise possede un site web"
+    },
+    "activeFacebookPage": {
+      "points": 5,
+      "description": "Page Facebook active (publications recentes)"
+    },
+    "mentionsManagement": {
+      "points": 20,
+      "description": "Le contenu mentionne la gestion d'entreprise"
+    },
+    "mentionsStock": {
+      "points": 20,
+      "description": "Le contenu mentionne la gestion de stock"
+    },
+    "mentionsInvoicing": {
+      "points": 20,
+      "description": "Le contenu mentionne la facturation"
+    },
+    "seekingSoftware": {
+      "points": 30,
+      "description": "L'entreprise recherche activement un logiciel"
+    },
+    "recentPublication": {
+      "points": 20,
+      "description": "Publication/activite recente detectee (< 90 jours)"
+    }
+  },
+  "thresholds": {
+    "hot": 70,
+    "warm": 40,
+    "cold": 0
+  }
+}

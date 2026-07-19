@@ -1,0 +1,27 @@
+{
+  "description": "Secteurs cibles pour la prospection et mots-cles utilises pour la detection sectorielle par Claude et pour la construction des requetes de recherche.",
+  "sectors": [
+    { "id": "boutiques", "label": "Boutiques", "keywords": ["boutique", "commerce de detail", "magasin"] },
+    { "id": "supermarches", "label": "Supermarches", "keywords": ["supermarche", "superette", "libre-service"] },
+    { "id": "pharmacies", "label": "Pharmacies", "keywords": ["pharmacie", "officine"] },
+    { "id": "quincailleries", "label": "Quincailleries", "keywords": ["quincaillerie", "materiaux de construction"] },
+    { "id": "hotels", "label": "Hotels", "keywords": ["hotel", "auberge", "hebergement"] },
+    { "id": "restaurants", "label": "Restaurants", "keywords": ["restaurant", "restauration", "maquis"] },
+    { "id": "ecoles", "label": "Ecoles", "keywords": ["ecole", "college", "lycee", "etablissement scolaire"] },
+    { "id": "cliniques", "label": "Cliniques", "keywords": ["clinique", "centre de sante", "hopital"] },
+    { "id": "cabinets", "label": "Cabinets", "keywords": ["cabinet medical", "cabinet comptable", "cabinet d'avocats"] },
+    { "id": "stations-service", "label": "Stations-service", "keywords": ["station-service", "station essence", "carburant"] },
+    { "id": "transport", "label": "Entreprises de transport", "keywords": ["transport", "logistique", "transitaire"] },
+    { "id": "grossistes", "label": "Grossistes", "keywords": ["grossiste", "vente en gros", "distributeur"] },
+    { "id": "pme", "label": "PME", "keywords": ["PME", "petite et moyenne entreprise", "entreprise"] },
+    { "id": "industries", "label": "Industries", "keywords": ["industrie", "usine", "unite de production"] },
+    { "id": "ong", "label": "ONG", "keywords": ["ONG", "organisation non gouvernementale", "humanitaire"] },
+    { "id": "associations", "label": "Associations", "keywords": ["association", "cooperative"] }
+  ],
+  "needSignals": {
+    "management": ["gestion", "gerer l'entreprise", "logiciel de gestion", "digitalisation"],
+    "stock": ["stock", "inventaire", "approvisionnement", "rupture de stock"],
+    "invoicing": ["facture", "facturation", "devis", "recu"],
+    "seekingSoftware": ["recherche logiciel", "besoin d'un logiciel", "application de gestion", "solution informatique", "automatiser"]
+  }
+}
