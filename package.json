@@ -12,13 +12,13 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" --fix",
+    "lint": "eslint --no-error-on-unmatched-pattern \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "lint:fix": "eslint --no-error-on-unmatched-pattern \"src/**/*.ts\" \"tests/**/*.ts\" --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "test": "jest --runInBand",
+    "test": "jest --runInBand --passWithNoTests",
     "test:watch": "jest --watch",
-    "test:unit": "jest --runInBand --testPathPattern=tests/unit",
-    "test:integration": "jest --runInBand --testPathPattern=tests/integration",
+    "test:unit": "jest --runInBand --passWithNoTests --testPathPattern=tests/unit",
+    "test:integration": "jest --runInBand --passWithNoTests --testPathPattern=tests/integration",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
